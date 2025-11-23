@@ -10,15 +10,13 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "imguiThemes.h"
 
-static void error_callback(int error, const char *description)
+static void error_callback(int error, const char* description)
 {
-	std::cout << "Error: " <<  description << "\n";
+	std::cout << "Error: " << description << "\n";
 }
-
 
 int main(void)
 {
-
 	glfwSetErrorCallback(error_callback);
 
 	if (!glfwInit())
@@ -34,7 +32,7 @@ int main(void)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #endif
 
-	GLFWwindow *window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1280, 720, "Template OpenGL", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -47,36 +45,26 @@ int main(void)
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-	
+
 	enableReportGlErrors();
-	
-	//glfwSwapInterval(1); //vsync
 
+	//glfwSwapInterval(1); // Descomente para ativar VSync
 
-#pragma region imgui
+#pragma region imgui_setup
 #if REMOVE_IMGUI == 0
 	ImGui::CreateContext();
-	ImGui::StyleColorsDark();				//you can use whatever imgui theme you like!
-	//imguiThemes::yellow();
-	//imguiThemes::gray();
-	//imguiThemes::green();
-	//imguiThemes::red();
-	//imguiThemes::embraceTheDarkness();
+	ImGui::StyleColorsDark(); // Tema padrão
 
-	ImGuiIO &io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-	//io.ConfigViewportsNoAutoMerge = true;
-	//io.ConfigViewportsNoTaskBarIcon = true;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Habilita Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Habilita Multi-Janelas
 
-	io.FontGlobalScale = 2.0f; //make text bigger please!
+	io.FontGlobalScale = 2.0f; // Escala da fonte
 
-	ImGuiStyle &style = ImGui::GetStyle();
+	ImGuiStyle& style = ImGui::GetStyle();
 	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
-		//style.WindowRounding = 0.0f;
 		style.Colors[ImGuiCol_WindowBg].w = 0.f;
 		style.Colors[ImGuiCol_DockingEmptyBg].w = 0.f;
 	}
@@ -86,73 +74,75 @@ int main(void)
 #endif
 #pragma endregion
 
-
-
+	// Inicializa renderizador 2D
 	gl2d::init();
 	gl2d::Renderer2D renderer;
 	renderer.create();
 
-	// Cria um array de 4 floats (Vermelho, Verde, Azul, Alpha/Transparência)
-	//float corDoQuadrado[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
-
+	// Loop Principal
 	while (!glfwWindowShouldClose(window))
 	{
+		// 1. Limpeza e Input
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Cor de fundo cinza escuro suave
 		glClear(GL_COLOR_BUFFER_BIT);
 
-
-	#pragma region imgui
+#pragma region imgui_start
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-	#pragma endregion
-
+#pragma endregion
 
 		renderer.updateWindowMetrics(width, height);
 
-		//renderer.renderRectangle({0,0, 100, 100}, Colors_Blue);
-		//renderer.renderRectangle({ 0, 0, 100, 100 }, { corDoQuadrado[0], corDoQuadrado[1], corDoQuadrado[2], corDoQuadrado[3] });
+		// ---------------------------------------------------------
+		// SEU CÓDIGO DO JOGO COMEÇA AQUI
+		// ---------------------------------------------------------
 
-		renderer.flush();
+		// Exemplo: renderer.renderRectangle({10, 10, 100, 100}, Colors_Red);
 
-		ImGui::ShowDemoWindow();
-		//ImGui::Begin("Test");
-		//ImGui::Text("Hello world!");
-		//ImGui::Button("Press me!");
-		//ImGui::ColorEdit4("Cor do Quadrado", corDoQuadrado);
-		//ImGui::End();
+		// Descomente a linha abaixo para ver os exemplos do ImGui quando precisar
+		// ImGui::ShowDemoWindow(); 
 
+		// ---------------------------------------------------------
+		// FIM DO CÓDIGO DO JOGO
+		// ---------------------------------------------------------
 
-	#pragma region imgui
+		renderer.flush(); // Renderiza tudo que foi acumulado
+
+#pragma region imgui_render
 		ImGui::Render();
 		int display_w, display_h;
 		glfwGetFramebufferSize(window, &display_w, &display_h);
 		glViewport(0, 0, display_w, display_h);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		// Update and Render additional Platform Windows
-		// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
-		//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+		// Atualiza janelas externas do ImGui (Viewports)
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
-			GLFWwindow *backup_current_context = glfwGetCurrentContext();
+			GLFWwindow* backup_current_context = glfwGetCurrentContext();
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
 		}
-	#pragma endregion
+#pragma endregion
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	glfwDestroyWindow(window);
+	// Limpeza Final
+#if REMOVE_IMGUI == 0
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+#endif
 
+	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	return 0;
 }
-
