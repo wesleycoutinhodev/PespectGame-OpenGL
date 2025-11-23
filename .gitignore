@@ -1,0 +1,13 @@
+/out/
+/build/
+/cmake-build-debug/
+/.vs/
+*.user
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.pch
+*.db
+*.opendb
+.DS_Store
