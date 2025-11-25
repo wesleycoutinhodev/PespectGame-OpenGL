@@ -1,13 +1,32 @@
-/out/
-/build/
-/cmake-build-debug/
-/.vs/
+# --- Visual Studio & CMake Lixo ---
+.vs/
+out/
+build/
+cmake-build-debug/
+x64/
+Debug/
+Release/
 *.user
+*.suo
+*.ipch
+*.aps
+
+# --- Compilação C++ ---
 *.exe
+*.dll
+*.lib
+*.obj
 *.pdb
 *.ilk
-*.obj
-*.pch
-*.db
-*.opendb
+*.exp
+
+# --- Mas queremos salvar as bibliotecas de terceiros se estiverem na pasta lib ---
+!thirdparty/**/*.dll
+!thirdparty/**/*.lib
+
+# --- Sistema Operacional ---
 .DS_Store
+Thumbs.db
+
+# --- ImGui (arquivos de config do usuário que não devem subir) ---
+imgui.ini

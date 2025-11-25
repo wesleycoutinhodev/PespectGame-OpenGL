@@ -69,7 +69,7 @@ else()
 
 endif()
 
-target_sources("${CMAKE_PROJECT_NAME}" PRIVATE ${MY_SOURCES}   )
+target_sources("${CMAKE_PROJECT_NAME}" PRIVATE ${MY_SOURCES}    "include/shader.h" "include/camera.h" "src/Shader.cpp" "include/game.h" "include/gameObject.h" "src/gameObject.cpp" "include/player.h" "src/player.cpp" "include/ResourceManager.h" "src/resourceManager.cpp" "include/gameLevel.h" "src/gameLevel.cpp")
 
 
 if(MSVC) # If using the VS compiler...
@@ -96,3 +96,4 @@ target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw
 	glad stb_image stb_truetype gl2d raudio imgui)
 
 
+file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
