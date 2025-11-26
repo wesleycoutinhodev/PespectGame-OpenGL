@@ -18,6 +18,13 @@ public:
     bool IsCoin;
     bool Active;
 
+    // --- VARIÁVEIS PARA PLATAFORMA MÓVEL ---
+    bool IsMoving;       
+    glm::vec3 MoveAxis;  
+    float MoveDistance; 
+    float MoveSpeed;     
+    float InitialX, InitialY;
+
 
     // Render state
     Texture2D Sprite;

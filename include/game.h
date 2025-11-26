@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <string>
 #include "gameObject.h"
 #include "player.h"
 #include "gameLevel.h"
@@ -21,6 +22,11 @@ public:
     unsigned int Width, Height;
     bool Is3DMode;   // A mecânica Dodo Duckie
 
+    unsigned int Coins;           
+    unsigned int CurrentLevel;    
+    std::vector<std::string> LevelPaths;
+    
+
     std::vector<GameLevel> Levels; // Vetor de levels
     unsigned int LevelIndex;
 
@@ -34,6 +40,7 @@ public:
     void ProcessInput(float dt);
     void Update(float dt);
     void Render();
+    void NextLevel(); 
 
     // Lista de objetos do jogo (Paredes, chão, etc)
     std::vector<GameObject> Bricks;

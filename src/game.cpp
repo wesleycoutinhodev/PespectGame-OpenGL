@@ -8,7 +8,9 @@
 unsigned int cubeVAO, cubeVBO;
 
 Game::Game(unsigned int width, unsigned int height)
-    : State(GAME_ACTIVE), Keys(), Width(width), Height(height), Is3DMode(false), MyPlayer(nullptr) {
+    : State(GAME_ACTIVE), Keys(), Width(width), Height(height), Is3DMode(false), MyPlayer(nullptr),
+    Coins(0), CurrentLevel(0), LevelIndex(0) 
+{
 }
 
 Game::~Game() {
@@ -29,21 +31,33 @@ void Game::Init() {
     myShader.use();
     myShader.setInt("image", 0);
 
-    // 3. Configurar Player e Level
-    GameLevel one;
-    one.Load("levels/1.lvl.txt", this->Width, this->Height);
-    this->Levels.push_back(one);
+    // 3. CONFIGURAR LEVEIS (Lógica Nova)
+    // Limpa qualquer lixo anterior
+    this->Levels.clear();
+    this->LevelPaths.clear();
 
-    if (one.StartPosition != glm::vec3(0.0f)) {
-        MyPlayer = new Player(one.StartPosition);
+    // Adiciona os caminhos dos arquivos
+    this->LevelPaths.push_back("levels/1.lvl.txt");
+    this->LevelPaths.push_back("levels/2.lvl.txt");
+
+    // Carrega o nível atual (baseado em CurrentLevel)
+    GameLevel currentLevelObj; // Nome mudei para evitar confusão
+    currentLevelObj.Load(this->LevelPaths[this->CurrentLevel].c_str(), this->Width, this->Height);
+    this->Levels.push_back(currentLevelObj);
+
+    // 4. Configurar Player
+    if (currentLevelObj.StartPosition != glm::vec3(0.0f)) {
+        MyPlayer = new Player(currentLevelObj.StartPosition);
     }
     else {
         MyPlayer = new Player(glm::vec3(2.0f, -2.0f, 0.0f));
     }
 
-    // 4. Configurar Cubo
+    // 5. Configurar Cubo (Vértices) - MANTENHA O CÓDIGO DOS VÉRTICES IGUAL AO ANTERIOR
+    // (Vou omitir aqui para economizar espaço, mas mantenha o float vertices[] e os glBufferData...)
     float vertices[] = {
-        // Pos                 // Normal           // Tex
+        // ... (Copie os vértices do código anterior ou mantenha se já estiver lá) ...
+        // Posições           // Normais           // Textura
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
          0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
@@ -114,6 +128,39 @@ bool CheckCollision(GameObject& one, GameObject& two) {
 }
 
 void Game::Update(float dt) {
+
+    // 0. Atualizar Plataformas Móveis
+    float time = (float)glfwGetTime();
+
+    for (GameObject& brick : this->Levels[this->LevelIndex].Bricks) {
+        if (brick.IsMoving) {
+            // Guarda posição antiga
+            glm::vec3 oldPos = brick.Position;
+
+            // Calcula nova posição com Seno (vai e volta)
+            float offset = sin(time * brick.MoveSpeed) * brick.MoveDistance;
+
+            if (brick.MoveAxis.x > 0)
+                brick.Position.x = brick.InitialX + offset;
+            if (brick.MoveAxis.y > 0)
+                brick.Position.y = brick.InitialY + offset;
+
+            // Calcula o DELTA (quanto moveu neste frame)
+            glm::vec3 deltaMovement = brick.Position - oldPos;
+
+            // --- CARREGAR O PLAYER ---
+            // Se o player está em cima da plataforma E não está pulando
+            // Verificamos colisão com um player levemente deslocado para baixo (pé)
+            GameObject tempPlayer = *MyPlayer;
+            tempPlayer.Position.y -= 0.1f; // Olha para o pé
+
+            // Verifica colisão E se o player está acima (para não grudar se bater de lado)
+            if (CheckCollision(tempPlayer, brick) && MyPlayer->Position.y > brick.Position.y) {
+                MyPlayer->Position += deltaMovement;
+            }
+        }
+    }
+
     // 1. Input do Player
     MyPlayer->ProcessInput(this->Keys, dt, this->Is3DMode);
 
@@ -151,6 +198,7 @@ void Game::Update(float dt) {
         else if (brick.IsCoin) {
             if (CheckCollision(*MyPlayer, brick)) {
                 brick.Destroyed = true;
+                this->Coins++;
                 std::cout << "MOEDA COLETADA! (+1)" << std::endl;
             }
         }
@@ -191,6 +239,8 @@ void Game::Update(float dt) {
         else if (!brick.IsSolid && !brick.IsCoin && !brick.IsPlate && CheckCollision(*MyPlayer, brick)) {
             std::cout << "VITORIA!" << std::endl;
             MyPlayer->Position = this->Levels[this->LevelIndex].StartPosition;
+            this->NextLevel();
+            return;
         }
     }
 
@@ -236,4 +286,28 @@ void Game::Render() {
 
     MyPlayer->Draw(shader.ID, cubeVAO);
     this->Levels[this->LevelIndex].Draw(shader.ID, cubeVAO);
+}
+
+void Game::NextLevel() {
+    this->CurrentLevel++;
+
+    if (this->CurrentLevel >= this->LevelPaths.size()) {
+        this->CurrentLevel = 0;
+        std::cout << "JOGO ZERADO! Voltando ao inicio." << std::endl;
+        this->Coins = 0; // Reseta moedas se quiser
+    }
+
+    this->Levels.clear();
+    GameLevel next;
+    next.Load(this->LevelPaths[this->CurrentLevel].c_str(), this->Width, this->Height);
+    this->Levels.push_back(next);
+
+    // 5. Reseta o Player
+    MyPlayer->Velocity = glm::vec3(0.0f);
+    MyPlayer->IsGrounded = false;
+
+    if (next.StartPosition != glm::vec3(0.0f))
+        MyPlayer->Position = next.StartPosition;
+    else
+        MyPlayer->Position = glm::vec3(0.0f, 5.0f, 0.0f); 
 }
