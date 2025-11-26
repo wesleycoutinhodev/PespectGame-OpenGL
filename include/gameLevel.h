@@ -12,6 +12,7 @@ class GameLevel {
 public:
     // Lista de blocos que compõem o cenário
     std::vector<GameObject> Bricks;
+    glm::vec3 StartPosition;
 
     GameLevel() {}
 

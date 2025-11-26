@@ -1,0 +1,54 @@
+================================================================================
+                           GUIA DE LEVEL DESIGN (Dodo Duckie 2.5D)
+================================================================================
+
+COMO FUNCIONA:
+- O TOPO do arquivo é o CÉU.
+- O FUNDO do arquivo é o CHÃO (Y = 0).
+- Cada caractere é um bloco de 1x1.
+
+--------------------------------------------------------------------------------
+1. BLOCOS ESTRUTURAIS (PAREDES)
+--------------------------------------------------------------------------------
+[#]  CHÃO SÓLIDO (Cinza)
+     - Profundidade Total (100%). Seguro.
+
+[M]  MEIO (Azul)
+     - Profundidade Média (66%). Ocupa o fundo e o meio.
+     - Cria um degrau visual.
+
+[F]  FUNDO (Laranja)
+     - Profundidade Rasa (33%). Fica colado na parede do fundo.
+     - PERIGO: O jogador cai se tentar andar aqui no modo 2D.
+     - Requer modo 3D ('C') para pisar.
+
+--------------------------------------------------------------------------------
+2. MOEDAS E COMBOS (NOVAS MECÂNICAS)
+--------------------------------------------------------------------------------
+[o]  MOEDA FLUTUANTE
+     - Uma moeda flutuando no ar (Z=0).
+     - Pegue pulando ou andando.
+
+[$]  COMBO: FUNDO + MOEDA (Parede 'F' com moeda atrás)
+     - Cria visualmente uma parede Laranja [F].
+     - Cria uma moeda flutuando logo acima dela, lá no fundo (Z=-3.0).
+     - PUZZLE: O jogador deve usar 'C', ir para o fundo e pular na plataforma.
+
+[%]  COMBO: MEIO + MOEDA (Parede 'M' com moeda na frente)
+     - Cria visualmente uma parede Azul [M].
+     - Cria uma moeda flutuando na frente (Z=0).
+     - O jogador pega andando normalmente, mas visualmente a moeda está sobre a plataforma.
+
+--------------------------------------------------------------------------------
+3. INTERATIVOS
+--------------------------------------------------------------------------------
+[P] Start   [@] Vitória   [X] Caixa   [_] Placa de Pressão
+
+--------------------------------------------------------------------------------
+EXEMPLO DE USO
+--------------------------------------------------------------------------------
+P  o                                   @
+#                                    ###
+#     $$$                            #M#  <- Paredes de fundo com moedas
+#     FFF          %                 #F#  <- Parede média com moeda
+########################################

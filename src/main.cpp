@@ -158,6 +158,21 @@ int main(void)
         ImGui::Begin("Debug");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Checkbox("Modo 3D", &DodoGame.Is3DMode); // Controle direto!
+        // Acesso direto às variáveis do Player (se forem públicas)
+        ImGui::SliderFloat("Velocidade", &DodoGame.MyPlayer->MoveSpeed, 1.0f, 20.0f);
+        ImGui::SliderFloat("Pulo Forca", &DodoGame.MyPlayer->JumpForce, 1.0f, 20.0f);
+
+        // Adicione uma variável Gravity na classe Player ou Game e controle aqui
+        // ImGui::SliderFloat("Gravidade", &DodoGame.Gravity, 1.0f, 50.0f);
+
+        if (ImGui::Button("Resetar Posição")) {
+            DodoGame.MyPlayer->Position = glm::vec3(2.0f, 0.0f, 0.0f);
+            DodoGame.MyPlayer->Velocity = glm::vec3(0.0f);
+        }
+
+        if (ImGui::Button("Recarregar Level (Hot Reload)")) {
+            DodoGame.Init(); // Ou uma função específica ReloadLevel()
+        }
         ImGui::End();
 
 #pragma region imgui_render

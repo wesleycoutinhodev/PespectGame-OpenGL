@@ -3,9 +3,8 @@
 
 #include <map>
 #include <string>
-
 #include <glad/glad.h>
-
+#include "texture.h"
 #include "shader.h"
 
 // Uma classe estática para gerenciar recursos (Shaders e Texturas)
@@ -24,12 +23,23 @@ public:
     // Limpa todos os recursos
     static void Clear();
 
+    // Armazenamento de Texturas
+    static std::map<std::string, Texture2D> Textures;
+
+    // Carrega textura de arquivo
+    static Texture2D LoadTexture(const char* file, bool alpha, std::string name);
+
+    // Pega textura pelo nome
+    static Texture2D GetTexture(std::string name);
+
 private:
     // Construtor privado, pois é uma classe estática pura
     ResourceManager() {}
 
     // Carrega e gera um shader de arquivo
     static Shader loadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile = nullptr);
+
+    static Texture2D loadTextureFromFile(const char* file, bool alpha);
 };
 
 #endif
