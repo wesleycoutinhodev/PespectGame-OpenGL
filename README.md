@@ -99,8 +99,8 @@ O jogo espera a seguinte estrutura de pastas junto ao executável:
 MeuJogo/
 ├── mygame.exe
 └── resources/
-    ├── shaders/       # (core.vs, core.fs, skybox.vs, skybox.fs)
-    ├── textures/      # (block.png, player.png, skybox/...)
-    ├── audio/         # (music.mp3, jump.wav, coin.mp3)
-    ├── objects/       # (player.obj)
-    └── fonts/         # (arial.ttf)
+|    ├── textures/      # (block.png, player.png, skybox/...)
+|    ├── audio/         # (music.mp3, jump.wav, coin.mp3)
+|
+└── fonts/         # (arial.ttf)
+├── shaders/ 
