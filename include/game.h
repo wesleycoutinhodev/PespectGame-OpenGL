@@ -26,9 +26,12 @@ public:
     unsigned int CurrentLevel;    
     std::vector<std::string> LevelPaths;
     
-
     std::vector<GameLevel> Levels; // Vetor de levels
     unsigned int LevelIndex;
+
+    unsigned int skyboxVAO, skyboxVBO;
+    unsigned int skyboxTexture;
+    
 
     Game(unsigned int width, unsigned int height);
     ~Game();

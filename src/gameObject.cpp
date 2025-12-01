@@ -6,7 +6,7 @@ GameObject::GameObject()
     : Position(0.0f), Size(1.0f), Color(1.0f), Rotation(0.0f), Sprite(),
     IsSolid(false), Destroyed(false), UseOutline(false),
     IsPushable(false), IsPlate(false), IsCoin(false),
-    Active(true), IsMoving(false), MoveAxis(0.0f), MoveDistance(0.0f), MoveSpeed(0.0f), InitialX(0.0f), InitialY(0.0f)
+    Active(true), IsMoving(false), MoveAxis(0.0f), MoveDistance(0.0f), MoveSpeed(0.0f), InitialX(0.0f), InitialY(0.0f), IsJumpPad(false), LinkID(0), LocalTime(0.0f), IsActivated(false)
 {
 }
 
@@ -14,7 +14,7 @@ GameObject::GameObject(glm::vec3 pos, glm::vec3 size, Texture2D sprite, glm::vec
     : Position(pos), Size(size), Color(color), Sprite(sprite), Rotation(0.0f),
     IsSolid(true), Destroyed(false), UseOutline(false),
     IsPushable(false), IsPlate(false), IsCoin(false),
-    Active(true), IsMoving(false), MoveAxis(0.0f), MoveDistance(0.0f), MoveSpeed(0.0f), InitialX(0.0f), InitialY(0.0f)
+    Active(true), IsMoving(false), MoveAxis(0.0f), MoveDistance(0.0f), MoveSpeed(0.0f), InitialX(0.0f), InitialY(0.0f), IsJumpPad(false), LinkID(0), LocalTime(0.0f), IsActivated(false)
 {
 }
 

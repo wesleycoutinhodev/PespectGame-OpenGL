@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-// Configurações de Profundidade
 const float TOTAL_DEPTH = 10.0f;
 const float Z_ANCHOR_BACK = -5.0f;
 
@@ -20,11 +19,7 @@ void GameLevel::Load(const char* file, unsigned int levelWidth, unsigned int lev
             for (char& c : line) {
                 if (c == '\r' || c == '\t') continue;
 
-                // Se for espaço, salvamos como 0 (Ar)
                 if (c == ' ') { row.push_back(0); continue; }
-
-                // AGORA SALVAMOS O PRÓPRIO CARACTERE NO VETOR!
-                // Ex: Se leu '#', salva '#' (que é 35 em ASCII)
                 row.push_back((unsigned int)c);
             }
             tileData.push_back(row);
@@ -102,6 +97,46 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> tileData, unsigned i
                 obj.MoveSpeed = 2.0f;
                 obj.InitialX = platPos.x;
                 obj.InitialY = platPos.y;
+                this->Bricks.push_back(obj);
+                continue;
+            }
+            // ----------------------------------------------------
+            // SISTEMA DE LINK (CANAL 1)
+            // ----------------------------------------------------
+
+            // '1' = PLACA DE PRESSÃO (TRIGGER ID 1)
+            else if (type == '1') {
+                pos.y -= 0.45f; // No chão
+                GameObject obj(pos, glm::vec3(0.8f, 0.1f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(1.0f, 0.2f, 0.2f)); // Vermelha
+
+                obj.IsSolid = false;
+                obj.IsPlate = true;
+                obj.LinkID = 1; // <--- ESTA PLACA MANDA SINAL NO CANAL 1
+
+                this->Bricks.push_back(obj);
+                continue;
+            }
+
+            // '!' = ELEVADOR VERTICAL (RECEIVER ID 1)
+            else if (type == '!') {
+                glm::vec3 platPos = pos;
+                platPos.z = 0.0f;
+
+                // Textura de metal/grade ficaria legal aqui
+                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(1.0f, 0.5f, 0.5f)); // Vermelho Claro
+
+                obj.IsSolid = true;
+                obj.IsMoving = true;
+                obj.IsActivated = false; // <--- COMEÇA PARADO!
+                obj.LinkID = 1;          // <--- ESCUTA O CANAL 1
+
+                // Configuração de Movimento
+                obj.MoveAxis = glm::vec3(0.0f, 1.0f, 0.0f); // Vertical
+                obj.MoveDistance = 4.0f;
+                obj.MoveSpeed = 2.0f;
+                obj.InitialX = platPos.x;
+                obj.InitialY = platPos.y;
+
                 this->Bricks.push_back(obj);
                 continue;
             }
@@ -214,6 +249,21 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> tileData, unsigned i
                 pos.y -= 0.45f;
                 GameObject obj(pos, glm::vec3(0.8f, 0.1f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(0.5f));
                 obj.IsPlate = true;
+                this->Bricks.push_back(obj);
+                continue;
+            }
+            // J = JUMP PAD (Trampolim)
+            else if (type == 'J') {
+                glm::vec3 size(unit_width, unit_height * 0.5f, 1.0f);
+                glm::vec3 padPos = pos;
+                padPos.z = 0.0f;
+                padPos.y -= unit_height * 0.25f;
+
+                GameObject obj(padPos, size, ResourceManager::GetTexture("block"), glm::vec3(0.2f, 1.0f, 0.2f));
+                obj.IsSolid = true;    
+                obj.IsJumpPad = true; 
+                obj.UseOutline = true;
+
                 this->Bricks.push_back(obj);
                 continue;
             }

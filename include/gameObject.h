@@ -18,12 +18,19 @@ public:
     bool IsCoin;
     bool Active;
 
-    // --- VARIÁVEIS PARA PLATAFORMA MÓVEL ---
+    // --- VARIÁVEIS PLATAFORMA MÓVEL ---
     bool IsMoving;       
     glm::vec3 MoveAxis;  
     float MoveDistance; 
     float MoveSpeed;     
     float InitialX, InitialY;
+
+    bool IsJumpPad;
+
+    int LinkID;        
+    float LocalTime;    
+    bool IsActivated;  
+    
 
 
     // Render state

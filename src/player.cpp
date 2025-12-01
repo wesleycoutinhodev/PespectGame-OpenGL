@@ -5,18 +5,18 @@ Player::Player(glm::vec3 pos)
 // CORREÇÃO: Agora passamos 'ResourceManager::GetTexture("block")' como 3º argumento
     : GameObject(pos, glm::vec3(0.8f, 0.8f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(1.0f, 0.0f, 0.0f)) {
 
-    // Configurações iniciais
     MoveSpeed = 5.0f;
     JumpForce = 7.0f;
     Velocity = glm::vec3(0.0f);
     IsGrounded = false;
+    JumpCount = 0;
 
     // ATIVA A BORDA SÓ PARA O PLAYER
     this->UseOutline = true;
 }
 
 void Player::ProcessInput(bool* keys, float dt, bool is3DMode) {
-    // Reseta velocidade horizontal
+    static bool spacePressed = false;
     Velocity.x = 0.0f;
     Velocity.z = 0.0f;
 
@@ -32,10 +32,21 @@ void Player::ProcessInput(bool* keys, float dt, bool is3DMode) {
         if (keys[GLFW_KEY_A]) Velocity.x = -MoveSpeed; // Esquerda
         if (keys[GLFW_KEY_D]) Velocity.x = MoveSpeed;  // Direita
 
+
         // Pulo (Só no 2D)
-        if (keys[GLFW_KEY_SPACE] && IsGrounded) {
-            Velocity.y = JumpForce;
-            IsGrounded = false;
+        if (keys[GLFW_KEY_SPACE]) {
+            if (!spacePressed) {
+                if (IsGrounded || JumpCount < 2) {
+                    Velocity.y = JumpForce;
+                    IsGrounded = false;
+                    JumpCount++;
+                    
+                }
+                spacePressed = true; // Trava até soltar a tecla
+            }
+        }
+        else {
+            spacePressed = false; // Destrava quando solta a tecla
         }
     }
 }

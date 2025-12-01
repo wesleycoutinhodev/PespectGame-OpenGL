@@ -1,23 +1,26 @@
-// ... (Includes iguais ao anterior) ...
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <gl2d/gl2d.h>
 #include <openglErrorReporting.h>
 
+// --- INCLUDES DO IMGUI ---
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "imguiThemes.h"
 
+// --- INCLUDES DO JOGO ---
 #include "game.h" 
 #include "resourceManager.h"
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
+// Instância Global do Jogo
 Game PERSPECT(SCR_WIDTH, SCR_HEIGHT);
 
+// Callbacks
 void error_callback(int error, const char* description) { std::cout << "Error: " << description << "\n"; }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -33,6 +36,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glVi
 
 int main(void)
 {
+    // 1. Setup GLFW/GLAD
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) exit(EXIT_FAILURE);
 
@@ -43,7 +47,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PERSPECT", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PERSPECT - Debug Mode", NULL, NULL);
     if (!window) { glfwTerminate(); exit(EXIT_FAILURE); }
 
     glfwMakeContextCurrent(window);
@@ -53,59 +57,66 @@ int main(void)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) { glfwTerminate(); exit(EXIT_FAILURE); }
     enableReportGlErrors();
 
+    // Configurações OpenGL
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#pragma region imgui_setup
-#if REMOVE_IMGUI == 0
+    // 2. SETUP IMGUI (INTERFACE DE DEBUG)
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::StyleColorsDark();
+    ImGui::StyleColorsDark(); // Tema Escuro
+
+    // Configuração para permitir teclado no ImGui
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    // Inicializa os backends do ImGui
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-#endif
-#pragma endregion
 
-    // Inicializa Jogo
+    // 3. INICIALIZA JOGO E HUD
     PERSPECT.Init();
 
-    // Inicializa GL2D
     gl2d::init();
     gl2d::Renderer2D renderer;
     renderer.create();
 
-    // --- CARREGAR FONTE (NOVO!) ---
-    // Certifique-se de ter "resources/font.ttf"
+    // Tenta carregar a fonte (se falhar, o gl2d usa um quadrado branco, mas não crasha se tratado)
     gl2d::Font font("resources/font.ttf");
-    // ------------------------------
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
+    // --- LOOP PRINCIPAL ---
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = (float)glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // Limpa Tela
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-#pragma region imgui_start
+        // Inicia Frame do ImGui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-#pragma endregion
 
-        // Lógica
+        // --- LÓGICA DO JOGO ---
         glfwPollEvents();
-        PERSPECT.ProcessInput(deltaTime);
+
+        // Se o mouse não estiver sobre uma janela do ImGui, processa o jogo
+        if (!io.WantCaptureMouse) {
+            PERSPECT.ProcessInput(deltaTime);
+        }
         PERSPECT.Update(deltaTime);
 
-        // Render 3D
+        // --- RENDER JOGO ---
         PERSPECT.Render();
 
-        // --- RENDERIZAÇÃO 2D (HUD) ---
+        // --- RENDER HUD (GL2D) ---
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         renderer.updateWindowMetrics(width, height);
@@ -114,29 +125,65 @@ int main(void)
         renderer.renderText({ 150, 50 }, coinText.c_str(), font, glm::vec4(1.0f, 0.8f, 0.0f, 1.0f), 0.5f);
 
         std::string levelText = "Nivel: " + std::to_string(PERSPECT.CurrentLevel + 1);
-        renderer.renderText({ (float)width - 150, 50 }, levelText.c_str(), font, glm::vec4(1.0f), 0.5f);
-
+        renderer.renderText({ (float)width - 150, 50 }, levelText.c_str(), font, glm::vec4(1.0f), 0.f);
         renderer.flush();
-        // -----------------------------
 
-        // ImGui Debug (Se quiser manter)
-        ImGui::Begin("Debug");
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        // --- JANELA DE DEBUG (IMGUI) ---
+        ImGui::Begin("Debug Tool (Física)"); // Cria a janela
+
+        ImGui::Text("FPS: %.1f", io.Framerate);
+        ImGui::Separator();
+
+        // Controle de Câmera
+        ImGui::Text("Modo de Visão:");
+        ImGui::Checkbox("3D (Perspectiva)", &PERSPECT.Is3DMode);
+
+        ImGui::Separator();
+
+        // Controles do Player (Só se o player existir)
+        if (PERSPECT.MyPlayer) {
+            ImGui::Text("Propriedades do Player:");
+
+            // Slider para Velocidade (1.0 a 20.0)
+            ImGui::SliderFloat("Velocidade", &PERSPECT.MyPlayer->MoveSpeed, 1.0f, 20.0f);
+
+            // Slider para Pulo (1.0 a 30.0) - Aumente aqui para testar super pulos
+            ImGui::SliderFloat("Força do Pulo", &PERSPECT.MyPlayer->JumpForce, 1.0f, 30.0f);
+
+            // Visualizar Velocidade Atual
+            ImGui::Text("Velocidade Y (Atual): %.2f", PERSPECT.MyPlayer->Velocity.y);
+
+            // Resetar Posição (Teleporte)
+            if (ImGui::Button("Teleportar p/ Inicio")) {
+                PERSPECT.MyPlayer->Position = glm::vec3(2.0f, 0.0f, 0.0f);
+                PERSPECT.MyPlayer->Velocity = glm::vec3(0.0f);
+            }
+        }
+
+        ImGui::Separator();
+
+        // Controles de Fase
+        if (ImGui::Button("Recarregar Fase (Reset)")) {
+            PERSPECT.Init();
+        }
+
+        if (ImGui::Button("Pular Fase (Next Level)")) {
+            PERSPECT.NextLevel();
+        }
+
         ImGui::End();
 
-#pragma region imgui_render
+        // Renderiza o ImGui na frente de tudo
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-#pragma endregion
 
         glfwSwapBuffers(window);
     }
 
-#if REMOVE_IMGUI == 0
+    // Limpeza
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-#endif
 
     glfwDestroyWindow(window);
     glfwTerminate();

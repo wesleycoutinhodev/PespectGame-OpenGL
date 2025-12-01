@@ -2,10 +2,12 @@
 #define RESOURCE_MANAGER_H
 
 #include <map>
-#include <string>
 #include <glad/glad.h>
 #include "texture.h"
 #include "shader.h"
+#include <string>  
+#include <vector> 
+
 
 // Uma classe estática para gerenciar recursos (Shaders e Texturas)
 class ResourceManager
@@ -31,6 +33,8 @@ public:
 
     // Pega textura pelo nome
     static Texture2D GetTexture(std::string name);
+
+    static unsigned int LoadCubemap(std::vector<std::string> faces);
 
 private:
     // Construtor privado, pois é uma classe estática pura
