@@ -35,33 +35,53 @@ Texture2D ResourceManager::GetTexture(std::string name)
     return Textures[name];
 }
 
-// Implementação do carregamento (A parte pesada)
 Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
 {
-    // Cria objeto textura
     Texture2D texture;
 
-    if (alpha) {
-        texture.Internal_Format = GL_RGBA;
-        texture.Image_Format = GL_RGBA;
-    }
+    std::cout << "    [STB] Tentando carregar: " << file << std::endl;
 
-    // Carrega imagem usando stb_image
     int width, height, nrChannels;
-    // O OpenGL lê o eixo Y de baixo para cima, mas imagens são de cima para baixo.
-    // stbi_set_flip_vertically_on_load(true) corrige isso se a textura ficar de ponta cabeça.
     unsigned char* data = stbi_load(file, &width, &height, &nrChannels, 0);
 
     if (data) {
+        std::cout << "    [STB] Sucesso! Dimensoes: " << width << "x" << height
+            << " | Canais: " << nrChannels << std::endl;
+
+        // DETECÇÃO AUTOMÁTICA DE FORMATO
+        if (nrChannels == 4) {
+            // Tem alpha
+            texture.Internal_Format = GL_RGBA;
+            texture.Image_Format = GL_RGBA;
+            std::cout << "    [STB] Usando formato RGBA (4 canais)" << std::endl;
+        }
+        else if (nrChannels == 3) {
+            // RGB sem alpha
+            texture.Internal_Format = GL_RGB;
+            texture.Image_Format = GL_RGB;
+            std::cout << "    [STB] Usando formato RGB (3 canais)" << std::endl;
+        }
+        else if (nrChannels == 1) {
+            // Grayscale
+            texture.Internal_Format = GL_RED;
+            texture.Image_Format = GL_RED;
+            std::cout << "    [STB] Usando formato Grayscale (1 canal)" << std::endl;
+        }
+
         texture.Generate(width, height, data);
     }
     else {
-        std::cout << "FALHA AO CARREGAR TEXTURA: " << file << std::endl;
+        std::cout << "    [STB] ERRO CRITICO ao carregar: " << file << std::endl;
+        std::cout << "    [STB] Motivo: " << stbi_failure_reason() << std::endl;
+
+        // Fallback
+        unsigned char fallbackData[] = { 255, 255, 255, 255 };
+        texture.Internal_Format = GL_RGBA;
+        texture.Image_Format = GL_RGBA;
+        texture.Generate(1, 1, fallbackData);
     }
 
-    // Libera memória da imagem (já está na GPU)
     stbi_image_free(data);
-
     return texture;
 }
 

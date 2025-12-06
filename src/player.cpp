@@ -1,8 +1,7 @@
 #include "player.h"
-#include "resourceManager.h" // <--- NECESSÁRIO PARA PEGAR A TEXTURA
+#include "resourceManager.h" 
 
 Player::Player(glm::vec3 pos)
-// CORREÇÃO: Agora passamos 'ResourceManager::GetTexture("block")' como 3º argumento
     : GameObject(pos, glm::vec3(0.8f, 0.8f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(1.0f, 0.0f, 0.0f)) {
 
     MoveSpeed = 5.0f;
@@ -11,11 +10,10 @@ Player::Player(glm::vec3 pos)
     IsGrounded = false;
     JumpCount = 0;
 
-    // ATIVA A BORDA SÓ PARA O PLAYER
     this->UseOutline = true;
 }
 
-void Player::ProcessInput(bool* keys, float dt, bool is3DMode) {
+void Player::ProcessInput(bool* keys, float dt, bool is3DMode, Sound jumpSfx) {
     static bool spacePressed = false;
     Velocity.x = 0.0f;
     Velocity.z = 0.0f;
@@ -40,6 +38,8 @@ void Player::ProcessInput(bool* keys, float dt, bool is3DMode) {
                     Velocity.y = JumpForce;
                     IsGrounded = false;
                     JumpCount++;
+                    PlaySound(jumpSfx);
+                    std::cout << "BOING!" << std::endl;
                     
                 }
                 spacePressed = true; // Trava até soltar a tecla

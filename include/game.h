@@ -8,6 +8,7 @@
 #include "gameObject.h"
 #include "player.h"
 #include "gameLevel.h"
+#include <raudio.h>
 
 enum GameState {
     GAME_ACTIVE,
@@ -29,8 +30,18 @@ public:
     std::vector<GameLevel> Levels; // Vetor de levels
     unsigned int LevelIndex;
 
-    unsigned int skyboxVAO, skyboxVBO;
-    unsigned int skyboxTexture;
+    unsigned int skyboxVAO = 0;
+    unsigned int skyboxVBO = 0;
+    unsigned int skyboxTexture = 0;
+
+    // --- VARIÁVEIS DE ÁUDIO ---
+    Music BgMusic = {0};    
+    Sound SfxJump = {0};
+    Sound SfxCoin = {0};
+    Sound SfxWin = { 0};
+    // --------------------------
+
+    Texture2D MenuTexture;
     
 
     Game(unsigned int width, unsigned int height);
