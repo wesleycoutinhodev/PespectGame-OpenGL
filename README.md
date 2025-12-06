@@ -1,52 +1,106 @@
-# GLFWCMakeSetup
+# PERSPECT 🧊
+
+> Um jogo de plataforma e puzzle 2.5D construído com uma Engine C++ e OpenGL customizada.
+
+![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-yellow)
+![Language](https://img.shields.io/badge/C++-17-blue)
+![OpenGL](https://img.shields.io/badge/OpenGL-3.3-green)
+
+**PERSPECT** explora a mecânica de alteração de perspectiva. O que parece ser um simples jogo de plataforma 2D esconde caminhos secretos e soluções que só podem ser vistas ao alternar para a visão 3D.
 
 ---
 
-## How to use it Tutorial 
+## 🎮 Funcionalidades (Features)
 
-https://www.youtube.com/watch?v=FrVABOhRyQg
+### Mecânicas de Jogo
+* **Troca de Perspectiva:** Alterne instantaneamente entre visão 2D (Ortográfica) e 3D (Perspectiva) para encontrar novos caminhos.
+* **Física Customizada:** Sistema de colisão AABB (Axis-Aligned Bounding Box) implementado do zero.
+* **Elementos de Puzzle:**
+    * 📦 Caixas empurráveis.
+    * 🔘 Placas de pressão e Links lógicos.
+    * ↕️ Elevadores e Plataformas móveis (com física de momento).
+* **Movimentação:** Pulo duplo, gravidade e controle aéreo.
 
-## What is it?
+### Tecnologia (Engine)
+* **Renderizador OpenGL Moderno:** Suporte a Shaders (GLSL), Texturas e Skybox (Cubemaps).
+* **Carregamento de Modelos 3D:** Suporte a arquivos `.OBJ` para o personagem.
+* **Level Design Baseado em Texto:** Fases carregadas dinamicamente via arquivos ASCII (`.lvl.txt`), facilitando a criação de mapas.
+* **Sistema de Áudio:** Música de fundo (Stream) e efeitos sonoros (SFX) via `raudio`.
 
-I already setup GLFW + GLAD + IMGUI + GLM + (sound (raudio) and networking (ENet) libraries) for you! 
-Take it and enjoy! You don't need to know CMake!
+---
 
-![image](https://github.com/meemknight/GLFWCMakeSetup/assets/36445656/79e122b9-a77b-4711-bbbe-138a071f3e91)
+## 🕹️ Controles
 
-<p>Opening the Solution:</p> 
+| Tecla | Ação |
+| :---: | :--- |
+| **W, A, S, D** | Movimentar o personagem |
+| **ESPAÇO** | Pular (Pressione novamente para Pulo Duplo) |
+| **C** | **Alternar Câmera (2D / 3D)** |
+| **ESC** | Sair do jogo |
 
-<img src="https://raw.githubusercontent.com/meemknight/photos/master/llge1.gif" width="350">
+---
 
-Or
+## 🛠️ Tecnologias Utilizadas
 
-<img src="https://raw.githubusercontent.com/meemknight/photos/master/llge2.gif" width="500">
+Este projeto não utiliza Engines prontas (como Unity ou Unreal). Tudo foi construído usando C++ e bibliotecas de baixo nível:
 
-Running the setup
+* **Linguagem:** C++17
+* **Gráficos:** OpenGL 3.3
+* **Janela & Input:** [GLFW](https://www.glfw.org/)
+* **Carregamento de Funções GL:** [GLAD](https://glad.dav1d.de/)
+* **Matemática:** [GLM](https://github.com/g-truc/glm)
+* **Imagens:** [stb_image](https://github.com/nothings/stb)
+* **Modelos 3D:** [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
+* **Áudio:** [raudio](https://github.com/raysan5/raudio) (wrapper do miniaudio)
 
-Go to CMakeLists.txt, <kbd>CTRL + S</kbd> to make sure the solution was built.
+---
 
-Then, from this dropdown select mygame.exe
+## 🚀 Como Compilar e Rodar
 
-<img src="https://raw.githubusercontent.com/meemknight/photos/master/llge3.gif" width="200">
+### Pré-requisitos
+* [CMake](https://cmake.org/) (Versão 3.10 ou superior)
+* Compilador C++ (Visual Studio MSVC recomendado no Windows, ou GCC/Clang)
 
-<kbd>Ctrl + F5</kbd> to build (<kbd>F5</kbd> oppens the debugger, you usually want to press <kbd>Ctrl + F5</kbd> because it oppens faster like this.
+### Passo a Passo (Windows/Visual Studio)
 
-<p>Adding files:<br>
-You should add .cpp in src/ and .h in include/ Whenever you add a new file CMake will ask you if you want to add that thing, say NO every time! I am already adding all of the things automatically!
-If you accidentally say YES, just remove that file from the CMake.lists
-</p>
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/wesleycoutinhodev/PespectGame-OpenGL.git](https://github.com/wesleycoutinhodev/PespectGame-OpenGL.git)
+    cd PespectGame-OpenGL
+    ```
 
-<p>Refreshing your changes:<br>
-After you add a file, the changes should be automatically added but if you want to be sure, you can refresh changes by saving the CMake file. If you want to make a hard refresh (you might have to do that sometimes) close Visual Studio, delete the out folder, reopen VS, <kbd>CTRL + S</kbd> on CMakeLists.txt</p>
+2.  **Gere os arquivos de build:**
+    Abra a pasta no Visual Studio (modo Pasta) ou use o terminal:
+    ```bash
+    mkdir build
+    cd build
+    cmake ..
+    ```
 
+3.  **Compile:**
+    Abra a solução `.sln` gerada ou compile via terminal:
+    ```bash
+    cmake --build .
+    ```
 
-# IMPORTANT!
-  To ship the game: 
-  In Cmakelists.txt, set the PRODUCTION_BUILD flag to ON to build a shippable version of your game. This will change the file paths to be relative to your exe (RESOURCES_PATH macro), will remove the console, and also will change the asserts to not allow people to debug them. To make sure the changes take effect I recommend deleting the out folder to make a new clean build!
+4.  **⚠️ IMPORTANTE - Recursos (Assets):**
+    Para o jogo rodar, a pasta `resources` (que contém texturas, sons e shaders) deve estar **na mesma pasta do executável**.
+    
+    * Copie a pasta `resources/` da raiz do projeto.
+    * Cole dentro de `out/build/x64-Debug/` (ou onde o `mygame.exe` foi criado).
 
+---
 
-  Also, if you read the CMAKE, even if you don't know CMAKE you should understand what happens with the comments there and you can add libraries and also remove the console from there if you need to! (there is a commented line for that!)
+## 📂 Estrutura de Arquivos (Assets)
 
-# Cmake full tutorial:
+O jogo espera a seguinte estrutura de pastas junto ao executável:
 
-https://www.youtube.com/watch?v=IBgfeZME2Vw
+```text
+MeuJogo/
+├── mygame.exe
+└── resources/
+|    ├── textures/      # (block.png, player.png, skybox/...)
+|    ├── audio/         # (music.mp3, jump.wav, coin.mp3)
+|
+└── fonts/         # (arial.ttf)
+├── shaders/ 
