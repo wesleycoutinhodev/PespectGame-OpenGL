@@ -27,7 +27,8 @@ void main()
     if (isEmissive) {
         // Ignora a matemática de luz e sombra.
         // Multiplica por glowStrength para ficar "mais branco que o branco" (efeito neon)
-        FragColor = vec4(texColor.rgb * lightColor * glowStrength, 1.0);
+        vec3 emissive = texColor.rgb * objectColor * glowStrength;
+        FragColor = vec4(emissive, 1.0);
     }
     // --- SE FOR CENÁRIO (NORMAL) ---
     else {

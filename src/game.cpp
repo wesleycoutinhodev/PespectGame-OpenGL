@@ -49,6 +49,14 @@ void Game::Init() {
     ResourceManager::LoadTexture("resources/textures/coin.png", true, "coin");
     std::cout << "  -> coin.png OK" << std::endl;
 
+    std::cout << "Carregando modelo 3D do player..." << std::endl;
+    Mesh* lumiMesh = ResourceManager::LoadModel(
+        "resources/models/lumi.obj",           // Caminho do OBJ
+        "resources/models/lumi_texture.png", // Textura
+        "lumi"                                  // Nome
+    );
+    std::cout << "  -> Modelo Lumi carregado OK" << std::endl;
+
     std::cout << "[3/9] Configurando shader..." << std::endl;
     Shader myShader = ResourceManager::GetShader("core");
     myShader.use();
@@ -101,12 +109,12 @@ void Game::Init() {
     // 4. Player Setup
     std::cout << "[8/9] Criando player..." << std::endl;
     if (currentLevelObj.StartPosition != glm::vec3(0.0f)) {
-        MyPlayer = new Player(currentLevelObj.StartPosition);
-        std::cout << "  -> Player criado em posicao do level" << std::endl;
+        MyPlayer = new Player(currentLevelObj.StartPosition, lumiMesh); // PASSA A MESH
+        MyPlayer->Size = glm::vec3(1.5f);
     }
     else {
-        MyPlayer = new Player(glm::vec3(2.0f, -2.0f, 0.0f));
-        std::cout << "  -> Player criado em posicao default" << std::endl;
+        MyPlayer = new Player(glm::vec3(2.0f, -2.0f, 0.0f), lumiMesh); // PASSA A MESH
+        MyPlayer->Size = glm::vec3(1.5f); 
     }
 
     // 5. Cube Geometry

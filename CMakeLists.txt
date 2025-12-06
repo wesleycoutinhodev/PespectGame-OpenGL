@@ -69,7 +69,7 @@ else()
 
 endif()
 
-target_sources("${CMAKE_PROJECT_NAME}" PRIVATE ${MY_SOURCES}    "include/shader.h" "src/Shader.cpp" "include/game.h" "include/gameObject.h" "src/gameObject.cpp" "include/player.h" "src/player.cpp" "include/ResourceManager.h" "src/resourceManager.cpp" "include/gameLevel.h" "src/gameLevel.cpp" "include/tiny_obj_loader.h")
+target_sources("${CMAKE_PROJECT_NAME}" PRIVATE ${MY_SOURCES}    "include/shader.h" "src/Shader.cpp" "include/game.h" "include/gameObject.h" "src/gameObject.cpp" "include/player.h" "src/player.cpp" "include/ResourceManager.h" "src/resourceManager.cpp" "include/gameLevel.h" "src/gameLevel.cpp" "include/tiny_obj_loader.h" "include/mesh.h" "src/mesh.cpp")
 
 
 if(MSVC) # If using the VS compiler...
