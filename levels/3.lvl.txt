@@ -1,9 +1,11 @@
 
-              FFFFFF-  -FFFFFF
-         o  VF$$$$$$$$$$$$$$FV  +
-    Po  ###F%MMMMMMMMMMMMM%F######    oo  @
-########H###%MMMMMMMMMMM%###H#########X__##
-#########H##%MMMMMMMMM%##H##########______#
-##########H#%%%%%%%%%#H###################
-###########HHHHHHHHHHH####################
-##########################################
+          --------------
+       FFFFFFFFFFFFFFFFFFFF
+     FFFFFFFFFFFFFFFFFFFFFFFFF
+    FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+P $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                                                        @  
+#######MMMMMMMMMMMMMMMMMMMMMMMM######################H      #H      #######FFFFFFF########
+########MMMMMMMMMMMMMMMMMMMMMM#######################
+#########MMMMMMMMMMMMMMMMMMMM#########################
+##########%%%%%%%%%%%%%%%%%%%#########################
+######################################################                                      

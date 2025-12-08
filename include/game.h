@@ -5,10 +5,15 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <string>
+#include <raudio.h>
+
 #include "gameObject.h"
 #include "player.h"
 #include "gameLevel.h"
-#include <raudio.h>
+
+// ====================================================
+// ENUMERAÇÕES
+// ====================================================
 
 enum GameState {
     GAME_ACTIVE,
@@ -16,49 +21,56 @@ enum GameState {
     GAME_WIN
 };
 
+// ====================================================
+// CLASSE GAME
+// ====================================================
+
 class Game {
 public:
-    GameState State;
-    bool Keys[1024]; // Armazena estado das teclas
+    // --- 1. Estado e Configurações ---
+    GameState    State;
+    bool         Keys[1024];
     unsigned int Width, Height;
-    bool Is3DMode;   // A mecânica Dodo Duckie
+    bool         Is3DMode; // Alterna entre 2D (Side Scroller) e 3D (Top-down/Iso)
 
-    unsigned int Coins;           
-    unsigned int CurrentLevel;    
+    // --- 2. Dados de Gameplay ---
+    unsigned int Coins;
+    unsigned int CurrentLevel;
+
+    // --- 3. Objetos e Níveis ---
+    Player* MyPlayer;
+    std::vector<GameLevel>   Levels;
     std::vector<std::string> LevelPaths;
-    
-    std::vector<GameLevel> Levels; // Vetor de levels
-    unsigned int LevelIndex;
 
-    unsigned int skyboxVAO = 0;
-    unsigned int skyboxVBO = 0;
-    unsigned int skyboxTexture = 0;
+    // --- 4. Recursos de Renderização ---
+    Texture2D    MenuTexture;
+    unsigned int skyboxVAO;
+    unsigned int skyboxVBO;
+    unsigned int skyboxTexture;
 
-    // --- VARIÁVEIS DE ÁUDIO ---
-    Music BgMusic = {0};    
-    Sound SfxJump = {0};
-    Sound SfxCoin = {0};
-    Sound SfxWin = { 0};
-    // --------------------------
+    // --- 5. Sistema de Áudio ---
+    Music BgMusic;
+    Sound SfxJump;
+    Sound SfxCoin;
+    Sound SfxWin;
 
-    Texture2D MenuTexture;
-    
+    // ====================================================
+    // MÉTODOS PÚBLICOS
+    // ====================================================
 
+    // Ciclo de Vida
     Game(unsigned int width, unsigned int height);
     ~Game();
 
-    // Inicializa shaders, texturas e levels
     void Init();
 
-    // Loop do jogo
+    // Game Loop
     void ProcessInput(float dt);
     void Update(float dt);
     void Render();
-    void NextLevel(); 
 
-    // Lista de objetos do jogo (Paredes, chão, etc)
-    std::vector<GameObject> Bricks;
-    Player* MyPlayer; // Ponteiro para o jogador
+    // Lógica de Controle
+    void NextLevel();
 };
 
 #endif

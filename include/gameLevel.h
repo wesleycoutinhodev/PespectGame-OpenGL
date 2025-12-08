@@ -8,25 +8,38 @@
 #include "gameObject.h"
 #include "resourceManager.h"
 
+// ====================================================
+// CLASSE GAMELEVEL
+// Responsável por armazenar e gerenciar a estrutura de uma fase
+// ====================================================
+
 class GameLevel {
 public:
-    // Lista de blocos que compõem o cenário
+    // --- 1. DADOS DO NÍVEL ---
+    // Vetor contendo todos os objetos (paredes, chão, moedas, triggers)
     std::vector<GameObject> Bricks;
-    glm::vec3 StartPosition = glm::vec3(0.0f);
 
-    GameLevel() {}
+    // Ponto de spawn inicial do jogador
+    glm::vec3 StartPosition;
 
-    // Carrega o level de um arquivo (vamos simplificar e carregar de uma matriz por enquanto)
+    // --- 2. CONSTRUTOR ---
+    GameLevel() : StartPosition(0.0f) {}
+
+    // --- 3. MÉTODOS PÚBLICOS ---
+
+    // Lê o arquivo de texto e popula o vetor Bricks
     void Load(const char* file, unsigned int levelWidth, unsigned int levelHeight);
 
-    // Desenha todos os blocos do level
+    // Renderiza todos os objetos ativos do nível
     void Draw(unsigned int shaderID, unsigned int cubeVAO);
 
-    // Verifica se o level está completo (para o futuro)
+    // Verifica condição de vitória (lógica futura/extensibilidade)
     bool IsCompleted();
 
 private:
-    // Função auxiliar para inicializar os blocos baseados nos números
+    // --- 4. MÉTODOS INTERNOS ---
+
+    // Interpreta a matriz numérica e instancia os GameObjects correspondentes
     void init(std::vector<std::vector<unsigned int>> tileData, unsigned int levelWidth, unsigned int levelHeight);
 };
 

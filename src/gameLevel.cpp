@@ -4,11 +4,20 @@
 #include <iostream>
 #include <string>
 
+// ====================================================
+// 0. CONSTANTES E DEFINIÇÕES GLOBAIS
+// ====================================================
+
 const float TOTAL_DEPTH = 10.0f;
 const float Z_ANCHOR_BACK = -5.0f;
 
+// ====================================================
+// 1. CARREGAMENTO E I/O (LOAD)
+// ====================================================
+
 void GameLevel::Load(const char* file, unsigned int levelWidth, unsigned int levelHeight) {
     this->Bricks.clear();
+
     std::string line;
     std::ifstream fstream(file);
     std::vector<std::vector<unsigned int>> tileData;
@@ -17,27 +26,53 @@ void GameLevel::Load(const char* file, unsigned int levelWidth, unsigned int lev
         while (std::getline(fstream, line)) {
             std::vector<unsigned int> row;
             for (char& c : line) {
+                // Ignora caracteres de formatação de arquivo
                 if (c == '\r' || c == '\t') continue;
 
-                if (c == ' ') { row.push_back(0); continue; }
+                // Espaço vazio é tratado como 0 (nada)
+                if (c == ' ') {
+                    row.push_back(0);
+                    continue;
+                }
+
                 row.push_back((unsigned int)c);
             }
             tileData.push_back(row);
         }
-        if (tileData.size() > 0) this->init(tileData, levelWidth, levelHeight);
+
+        if (tileData.size() > 0) {
+            this->init(tileData, levelWidth, levelHeight);
+        }
     }
     else {
-        std::cout << "ERRO: Nao foi possivel abrir o level: " << file << std::endl;
+        std::cout << "[ERRO CRITICO] Nao foi possivel abrir o arquivo de level: " << file << std::endl;
     }
 }
 
+// ====================================================
+// 2. RENDERIZAÇÃO (DRAW)
+// ====================================================
+
 void GameLevel::Draw(unsigned int shaderID, unsigned int cubeVAO) {
-    for (GameObject& tile : this->Bricks)
-        if (!tile.Destroyed)
-            tile.Draw(shaderID, cubeVAO);
+    for (GameObject& tile : this->Bricks) {
+        if (!tile.Destroyed) {
+            // Bloco try-catch mantido para segurança contra falhas de renderização em objetos específicos
+            try {
+                tile.Draw(shaderID, cubeVAO);
+            }
+            catch (...) {
+                // Silencia erros de renderização individuais para evitar crash do loop
+            }
+        }
+    }
 }
 
+// ====================================================
+// 3. INICIALIZAÇÃO LÓGICA (INIT)
+// ====================================================
+
 void GameLevel::init(std::vector<std::vector<unsigned int>> tileData, unsigned int levelWidth, unsigned int levelHeight) {
+    // 1. Calcula dimensões da matriz
     unsigned int height = (unsigned int)tileData.size();
     unsigned int width = 0;
     for (auto& row : tileData) {
@@ -47,91 +82,89 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> tileData, unsigned i
     float unit_width = 1.0f;
     float unit_height = 1.0f;
 
-    // --- CÁLCULO DOS CENTROS DAS FATIAS Z ---
-    float sliceDepth = TOTAL_DEPTH / 3.0f; // ~3.33f
+    // 2. Cálculo de fatias de profundidade (Z-Slicing)
+    // Divide o mundo 3D em 3 camadas de profundidade para jogabilidade 2.5D
+    float sliceDepth = TOTAL_DEPTH / 3.0f;
     float zCenterBack = Z_ANCHOR_BACK + (sliceDepth * 0.5f);
     float zCenterMiddle = Z_ANCHOR_BACK + sliceDepth + (sliceDepth * 0.5f);
     float zCenterFront = Z_ANCHOR_BACK + (2.0f * sliceDepth) + (sliceDepth * 0.5f);
 
+    // 3. Loop de parsing da matriz
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
+
+            // Validação de limites e tipo
             unsigned int type = 0;
             if (x < tileData[y].size()) type = tileData[y][x];
-
             if (type == 0) continue;
 
+            // Configuração base de posição
             glm::vec3 pos(unit_width * x, unit_height * (height - 1 - y), 0.0f);
             glm::vec3 size(unit_width, unit_height, 1.0f);
+
+            // Variáveis de estado para blocos padrão
             glm::vec3 color(1.0f);
             Texture2D texture = ResourceManager::GetTexture("block");
-
             bool processBlock = false;
             bool isSolid = false;
             float depthPercentage = 1.0f;
 
-            // ==========================================================
-            //                PLATAFORMAS MÓVEIS (H / V)
-            // ==========================================================
+            // --- TIPO A: PLATAFORMAS MÓVEIS (H, V) ---
             if (type == 'H') {
-                glm::vec3 platPos = pos;
-                platPos.z = 0.0f;
-                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(0.6f, 0.7f, 1.0f));
+                glm::vec3 platPos = pos; platPos.z = 0.0f;
+                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(1.0f));
+
                 obj.IsSolid = true;
                 obj.IsMoving = true;
-                obj.MoveAxis = glm::vec3(1.0f, 0.0f, 0.0f);
-                obj.MoveDistance = 2.0f;
-                obj.MoveSpeed = 2.0f;
+                obj.MoveAxis = glm::vec3(1.0f, 0.0f, 0.0f); // Horizontal
+                obj.MoveDistance = 6.0f;
+                obj.MoveSpeed = 2.5f;
                 obj.InitialX = platPos.x;
                 obj.InitialY = platPos.y;
+
                 this->Bricks.push_back(obj);
                 continue;
             }
             else if (type == 'V') {
-                glm::vec3 platPos = pos;
-                platPos.z = 0.0f;
-                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(0.6f, 0.7f, 1.0f));
+                glm::vec3 platPos = pos; platPos.z = 0.0f;
+                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(1.0f));
+
                 obj.IsSolid = true;
                 obj.IsMoving = true;
-                obj.MoveAxis = glm::vec3(0.0f, 1.0f, 0.0f);
-                obj.MoveDistance = 3.0f;
-                obj.MoveSpeed = 2.0f;
+                obj.MoveAxis = glm::vec3(0.0f, 1.0f, 0.0f); // Vertical
+                obj.MoveDistance = 6.0f;
+                obj.MoveSpeed = 2.5f;
                 obj.InitialX = platPos.x;
                 obj.InitialY = platPos.y;
+
                 this->Bricks.push_back(obj);
                 continue;
             }
-            // ----------------------------------------------------
-            // SISTEMA DE LINK (CANAL 1)
-            // ----------------------------------------------------
 
-            // '1' = PLACA DE PRESSÃO (TRIGGER ID 1)
+            // --- TIPO B: SISTEMAS LÓGICOS E LINKS ---
+            // '1' = Placa de Pressão (Emissor)
             else if (type == '1') {
-                pos.y -= 0.45f; // No chão
-                GameObject obj(pos, glm::vec3(0.8f, 0.1f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(1.0f, 0.2f, 0.2f)); // Vermelha
+                pos.y -= 0.45f; // Ajuste para ficar no chão
+                GameObject obj(pos, glm::vec3(0.8f, 0.1f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(1.0f));
 
                 obj.IsSolid = false;
                 obj.IsPlate = true;
-                obj.LinkID = 1; // <--- ESTA PLACA MANDA SINAL NO CANAL 1
+                obj.LinkID = 1; // Canal 1
 
                 this->Bricks.push_back(obj);
                 continue;
             }
-
-            // '!' = ELEVADOR VERTICAL (RECEIVER ID 1)
+            // '!' = Elevador Ativável (Receptor)
             else if (type == '!') {
-                glm::vec3 platPos = pos;
-                platPos.z = 0.0f;
-
-                // Textura de metal/grade ficaria legal aqui
-                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(1.0f, 0.5f, 0.5f)); // Vermelho Claro
+                glm::vec3 platPos = pos; platPos.z = 0.0f;
+                GameObject obj(platPos, size, ResourceManager::GetTexture("block"), glm::vec3(1.0f));
 
                 obj.IsSolid = true;
                 obj.IsMoving = true;
-                obj.IsActivated = false; // <--- COMEÇA PARADO!
-                obj.LinkID = 1;          // <--- ESCUTA O CANAL 1
+                obj.IsActivated = false; // Inicia parado
+                obj.LinkID = 1;          // Escuta Canal 1
 
-                // Configuração de Movimento
-                obj.MoveAxis = glm::vec3(0.0f, 1.0f, 0.0f); // Vertical
+                obj.MoveAxis = glm::vec3(0.0f, 1.0f, 0.0f);
                 obj.MoveDistance = 4.0f;
                 obj.MoveSpeed = 2.0f;
                 obj.InitialX = platPos.x;
@@ -141,137 +174,161 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> tileData, unsigned i
                 continue;
             }
 
-            // ==========================================================
-            //                MOEDAS NO AR (o, +, -)
-            // ==========================================================
-            else if (type == 'o') { // Moeda Normal (Meio)
+            // --- TIPO C: COLETÁVEIS / MOEDAS (o, +, -) ---
+            else if (type == 'o' || type == '+' || type == '-') {
                 glm::vec3 coinPos = pos;
-                coinPos.z = zCenterMiddle;
-                GameObject coin(coinPos, glm::vec3(0.5f, 0.5f, 0.1f), ResourceManager::GetTexture("coin"), glm::vec3(1.0f, 1.0f, 0.0f));
-                coin.IsSolid = false; coin.IsCoin = true; coin.UseOutline = true;
-                this->Bricks.push_back(coin);
-                continue;
-            }
-            else if (type == '+') { // Moeda Frente
-                glm::vec3 coinPos = pos;
-                coinPos.z = zCenterFront;
-                GameObject coin(coinPos, glm::vec3(0.5f, 0.5f, 0.1f), ResourceManager::GetTexture("coin"), glm::vec3(1.0f, 0.8f, 0.0f));
-                coin.IsSolid = false; coin.IsCoin = true; coin.UseOutline = true;
-                this->Bricks.push_back(coin);
-                continue;
-            }
-            else if (type == '-') { // Moeda Fundo
-                glm::vec3 coinPos = pos;
-                coinPos.z = zCenterBack;
-                GameObject coin(coinPos, glm::vec3(0.5f, 0.5f, 0.1f), ResourceManager::GetTexture("coin"), glm::vec3(0.8f, 0.6f, 0.0f));
-                coin.IsSolid = false; coin.IsCoin = true; coin.UseOutline = true;
+
+                // Define profundidade baseada no caractere
+                if (type == 'o') coinPos.z = 0.0f;           // Meio
+                else if (type == '+') coinPos.z = 3.0f;      // Frente
+                else if (type == '-') coinPos.z = -3.0f;     // Fundo
+
+                GameObject coin(coinPos, glm::vec3(0.5f), ResourceManager::GetTexture("block"), glm::vec3(1.0f));
+                coin.IsSolid = false;
+                coin.IsCoin = true;
+                coin.UseOutline = true;
+
+                Mesh* crystalMesh = ResourceManager::GetModel("crystal");
+                if (crystalMesh != nullptr) {
+                    coin.ObjectMesh = crystalMesh;
+                }
+                else {
+                    coin.ObjectMesh = nullptr;
+                }
+
                 this->Bricks.push_back(coin);
                 continue;
             }
 
-            // ==========================================================
-            //                COMBOS ($, %)
-            // ==========================================================
-            else if (type == '$') { // COMBO FUNDO
-                // 1. Parede F
+            // --- TIPO D: COMBOS ESTRUTURAIS ($, %) ---
+            else if (type == '$') {
+                // Combo Fundo: Parede atrás + Moeda no meio
+
+                // 1. Parede (Fundo)
                 float depthF = TOTAL_DEPTH * 0.333f;
                 glm::vec3 wallSize(unit_width, unit_height, depthF);
                 glm::vec3 wallPos = pos;
                 wallPos.z = Z_ANCHOR_BACK + (depthF / 2.0f);
-                GameObject wall(wallPos, wallSize, ResourceManager::GetTexture("block"), glm::vec3(0.8f, 0.4f, 0.1f));
+
+                GameObject wall(wallPos, wallSize, ResourceManager::GetTexture("solid"), glm::vec3(0.5f, 0.5f, 0.5f));
                 wall.IsSolid = true;
+                wall.ObjectMesh = nullptr;
                 this->Bricks.push_back(wall);
 
-                // 2. Moeda (Centro da Fatia MEIO)
+                // 2. Moeda (Meio)
                 glm::vec3 coinPos = pos;
                 coinPos.z = zCenterMiddle;
-                GameObject coin(coinPos, glm::vec3(0.5f, 0.5f, 0.1f), ResourceManager::GetTexture("coin"), glm::vec3(1.0f, 1.0f, 0.0f));
-                coin.IsSolid = false; coin.IsCoin = true; coin.UseOutline = true;
+
+                GameObject coin(coinPos, glm::vec3(0.5f), ResourceManager::GetTexture("solid"), glm::vec3(1.0f));
+                coin.IsSolid = false;
+                coin.IsCoin = true;
+                coin.UseOutline = true;
+
+                Mesh* crystalMesh = ResourceManager::GetModel("crystal");
+                coin.ObjectMesh = (crystalMesh != nullptr) ? crystalMesh : nullptr;
+
                 this->Bricks.push_back(coin);
                 continue;
             }
-            else if (type == '%') { // COMBO MEIO
-                // 1. Parede M
+            else if (type == '%') {
+                // Combo Meio: Parede no meio + Moeda na frente
+
+                // 1. Parede (Meio)
                 float depthM = TOTAL_DEPTH * 0.666f;
                 glm::vec3 wallSize(unit_width, unit_height, depthM);
                 glm::vec3 wallPos = pos;
                 wallPos.z = Z_ANCHOR_BACK + (depthM / 2.0f);
-                GameObject wall(wallPos, wallSize, ResourceManager::GetTexture("block"), glm::vec3(0.2f, 0.6f, 0.8f));
+
+                GameObject wall(wallPos, wallSize, ResourceManager::GetTexture("solid"), glm::vec3(0.5f, 0.5f, 0.5f));
                 wall.IsSolid = true;
+                wall.ObjectMesh = nullptr;
                 this->Bricks.push_back(wall);
 
-                // 2. Moeda (Centro da Fatia FRENTE)
+                // 2. Moeda (Frente)
                 glm::vec3 coinPos = pos;
                 coinPos.z = zCenterFront;
-                GameObject coin(coinPos, glm::vec3(0.5f, 0.5f, 0.1f), ResourceManager::GetTexture("coin"), glm::vec3(1.0f, 1.0f, 0.0f));
-                coin.IsSolid = false; coin.IsCoin = true; coin.UseOutline = true;
+
+                GameObject coin(coinPos, glm::vec3(0.5f), ResourceManager::GetTexture("solid"), glm::vec3(1.0f));
+                coin.IsSolid = false;
+                coin.IsCoin = true;
+                coin.UseOutline = true;
+
+                Mesh* crystalMesh = ResourceManager::GetModel("crystal");
+                coin.ObjectMesh = (crystalMesh != nullptr) ? crystalMesh : nullptr;
+
                 this->Bricks.push_back(coin);
                 continue;
             }
 
-            // ==========================================================
-            //                BLOCOS ESTRUTURAIS E OBJETOS
-            // ==========================================================
+            // --- TIPO E: BLOCOS ESTRUTURAIS BÁSICOS (#, F, M, B) ---
             if (type == '#' || type == 'F' || type == 'M' || type == 'B') {
                 processBlock = true;
                 isSolid = true;
 
-                if (type == '#') { // #
+                if (type == '#') { // Bloco Completo
                     depthPercentage = 1.0f;
                     color = glm::vec3(0.5f, 0.5f, 0.5f);
                     texture = ResourceManager::GetTexture("solid");
                 }
-                else if (type == 'M') { // M
+                else if (type == 'M') { // Médio
                     depthPercentage = 0.666f;
-                    color = glm::vec3(0.2f, 0.6f, 0.8f);
+                    color = glm::vec3(0.5f, 0.5f, 0.5f);
+                    texture = ResourceManager::GetTexture("solid");
+
                 }
-                else if (type == 'F' || type == 'B') { // F
+                else if (type == 'F' || type == 'B') { // Fino
                     depthPercentage = 0.333f;
-                    color = glm::vec3(0.8f, 0.4f, 0.1f);
+                    color = glm::vec3(0.5f, 0.5f, 0.5f);
+                    texture = ResourceManager::GetTexture("solid");
                 }
 
                 size.z = TOTAL_DEPTH * depthPercentage;
                 pos.z = Z_ANCHOR_BACK + (size.z / 2.0f);
             }
-            else if (type == 'X') { // X - Caixa
+
+            // --- TIPO F: OBJETOS INTERATIVOS E ESPECIAIS ---
+            else if (type == 'X') { // Caixa (Pushable)
                 GameObject obj(pos, glm::vec3(0.9f), ResourceManager::GetTexture("crate"), glm::vec3(1.0f));
-                obj.IsSolid = true; obj.IsPushable = true; obj.UseOutline = true;
+                obj.IsSolid = true;
+                obj.IsPushable = true;
+                obj.UseOutline = true;
                 this->Bricks.push_back(obj);
                 continue;
             }
-            else if (type == '@') { // @ - Vitória
-                GameObject obj(pos, glm::vec3(0.5f), ResourceManager::GetTexture("block"), glm::vec3(1.0f, 1.0f, 0.0f));
+            else if (type == '@') { // Ponto de Vitória
+                GameObject obj(pos, glm::vec3(0.5f), ResourceManager::GetTexture("block"), glm::vec3(1.0f));
                 obj.IsSolid = false;
                 this->Bricks.push_back(obj);
                 continue;
             }
-            else if (type == '_') { // _ - Placa
+            else if (type == '_') { // Placa decorativa
                 pos.y -= 0.45f;
                 GameObject obj(pos, glm::vec3(0.8f, 0.1f, 0.8f), ResourceManager::GetTexture("block"), glm::vec3(0.5f));
                 obj.IsPlate = true;
                 this->Bricks.push_back(obj);
                 continue;
             }
-            // J = JUMP PAD (Trampolim)
-            else if (type == 'J') {
-                glm::vec3 size(unit_width, unit_height * 0.5f, 1.0f);
-                glm::vec3 padPos = pos;
-                padPos.z = 0.0f;
-                padPos.y -= unit_height * 0.25f;
+            else if (type == 'J') { // Jump Pad (Trampolim)
+                glm::vec3 padSize(1.5f, 1.0f, 1.5f);
+                pos.y -= 0.30f;
+                GameObject obj(pos, padSize, ResourceManager::GetTexture("block"), glm::vec3(1.0f));
 
-                GameObject obj(padPos, size, ResourceManager::GetTexture("block"), glm::vec3(0.2f, 1.0f, 0.2f));
-                obj.IsSolid = true;    
-                obj.IsJumpPad = true; 
-                obj.UseOutline = true;
+                obj.IsSolid = true;
+                obj.IsJumpPad = true;
+
+                Mesh* padMesh = ResourceManager::GetModel("pad");
+                obj.ObjectMesh = (padMesh != nullptr) ? padMesh : nullptr;
 
                 this->Bricks.push_back(obj);
                 continue;
             }
-            else if (type == 'P') { // P - Player
-                this->StartPosition = glm::vec3(pos.x, pos.y, 0.0f);
+            else if (type == 'P') { // Player Start Position
+                this->StartPosition = pos;
+                this->StartPosition.y += 0.1f;
                 continue;
             }
 
+            // --- PROCESSAMENTO FINAL PARA BLOCOS ESTRUTURAIS ---
             if (processBlock) {
                 GameObject obj(pos, size, texture, color);
                 obj.IsSolid = isSolid;

@@ -1,55 +1,77 @@
 #version 330 core
+
+// ====================================================
+// 1. CONFIGURAÇÃO DE SAÍDA
+// ====================================================
 out vec4 FragColor;
 
+// ====================================================
+// 2. ENTRADAS (VINDAS DO VERTEX SHADER)
+// ====================================================
 in vec2 TexCoords;
 in vec3 Normal;
 in vec3 FragPos;
 
-uniform vec3 objectColor;
-uniform sampler2D image;
+// ====================================================
+// 3. UNIFORMS
+// ====================================================
 
-// Controle de Atmosfera
+// Material e Textura
+uniform sampler2D image;
+uniform vec3 objectColor;
+
+// Iluminação (Ambiente e Difusa)
 uniform vec3 lightColor;
+uniform vec3 lightPos;
 uniform float ambientStrength;
 
-// --- NOVO: POSIÇÃO DA LUZ E CONTROLE DE EMISSÃO ---
-uniform vec3 lightPos;      // Agora a posição da luz vem do C++
-uniform bool isEmissive;    // Se for true, o objeto brilha e ignora sombras
-uniform float glowStrength; // Força do brilho extra (1.0 = normal, 2.0 = muito forte)
+// Efeitos Especiais (Emissão/Glow)
+uniform bool isEmissive;   // Se true, ignora luz e brilha
+uniform float glowStrength; // Multiplicador de intensidade do brilho
 
+// ====================================================
+// 4. MAIN
+// ====================================================
 void main()
 {
+    // Amostragem da textura base
     vec4 texColor = texture(image, TexCoords);
+
+    // Descarte de pixels transparentes (Alpha Clipping)
     if(texColor.a < 0.1)
         discard;
 
-    // --- SE FOR O LUMI (EMISSIVO) ---
+    // --- RAMIFICAÇÃO LÓGICA DE RENDERIZAÇÃO ---
+    
     if (isEmissive) {
-        // Ignora a matemática de luz e sombra.
-        // Multiplica por glowStrength para ficar "mais branco que o branco" (efeito neon)
+        // [MODO EMISSIVO]
+        // O objeto emite luz própria. Ignora sombreamento.
+        // glowStrength > 1.0 cria efeito de "bloom" ou neon.
         vec3 emissive = texColor.rgb * objectColor * glowStrength;
         FragColor = vec4(emissive, 1.0);
     }
-    // --- SE FOR CENÁRIO (NORMAL) ---
     else {
-        // 1. Ambiente
+        // [MODO ILUMINADO]
+        // O objeto reage à luz ambiente e difusa (Phong simplificado).
+
+        // A. Componente Ambiente (Luz base global)
         vec3 ambient = ambientStrength * lightColor;
-      
-        // 2. Difusa (Luz pontual vinda do Player)
+
+        // B. Componente Difusa (Luz direcional baseada na normal)
         vec3 norm = normalize(Normal);
-        vec3 lightDir = normalize(lightPos - FragPos); // Direção da luz até o pixel
-        
-        // Atenuação (Para a luz ficar forte perto e fraca longe)
-        float distance = length(lightPos - FragPos);
-        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * (distance * distance));
-        
+        vec3 lightDir = normalize(lightPos - FragPos);
         float diff = max(dot(norm, lightDir), 0.0);
         vec3 diffuse = diff * lightColor;
-        
-        // Aplica atenuação na luz difusa (o ambiente continua global)
+
+        // C. Atenuação (Inverse Square Law Approximation)
+        // Faz a luz decair conforme a distância do jogador aumenta.
+        float distance = length(lightPos - FragPos);
+        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * (distance * distance));
+
+        // Aplica a atenuação apenas na luz difusa
         diffuse *= attenuation;
 
-        // Combina tudo
+        // D. Combinação Final
         vec3 result = (ambient + diffuse) * objectColor * texColor.rgb;
         FragColor = vec4(result, 1.0);
     }

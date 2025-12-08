@@ -4,30 +4,39 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+
+// ====================================================
+// CLASSE SHADER
+// Gerencia a compilação, linkagem e ativação de programas GLSL
+// ====================================================
 
 class Shader {
 public:
-    unsigned int ID; // ID do programa no OpenGL
+    // --- 1. ESTADO ---
+    unsigned int ID; // ID do programa compilado no OpenGL
 
-    // Construtor lê e constrói o shader
+    // ====================================================
+    // MÉTODOS PÚBLICOS
+    // ====================================================
+
+    // Construtores
     Shader() { ID = 0; }
-
     Shader(const char* vertexPath, const char* fragmentPath);
 
-    // Ativar o shader
+    // Ativa o shader para uso na renderização atual
     void use();
 
-    // Funções utilitárias para mandar dados (Uniforms)
+    // --- Utilitários de Uniforms (Envio de dados CPU -> GPU) ---
     void setBool(const std::string& name, bool value) const;
     void setInt(const std::string& name, int value) const;
     void setFloat(const std::string& name, float value) const;
-    void setMat4(const std::string& name, const glm::mat4& mat) const;
     void setVec3(const std::string& name, const glm::vec3& value) const;
+    void setMat4(const std::string& name, const glm::mat4& mat) const;
 
 private:
+    // --- MÉTODOS INTERNOS ---
+    // Verifica erros de compilação e linkagem
     void checkCompileErrors(unsigned int shader, std::string type);
 };
+
 #endif

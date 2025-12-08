@@ -1,45 +1,66 @@
 #include "mesh.h"
-#include <glm/gtc/type_ptr.hpp>
+#include <cstddef> // Necessário para offsetof
+
+// ====================================================
+// 1. CONSTRUTOR
+// ====================================================
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Texture2D texture)
     : vertices(vertices), indices(indices), texture(texture)
 {
-    setupMesh();
+    this->setupMesh();
 }
 
+// ====================================================
+// 2. CONFIGURAÇÃO DOS BUFFERS (SETUP)
+// ====================================================
+
 void Mesh::setupMesh() {
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    // Geração de Buffers/Arrays
+    glGenVertexArrays(1, &this->VAO);
+    glGenBuffers(1, &this->VBO);
+    glGenBuffers(1, &this->EBO);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(this->VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+    // Carregamento de dados de Vértices
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    // Carregamento de Índices (EBO)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), &this->indices[0], GL_STATIC_DRAW);
 
-    // Posição
+    // Configuração de Atributos (Vertex Attrib Pointers)
+    // Layout 0: Posição (vec3)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
-    // Normal
+    // Layout 1: Normal (vec3)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 
-    // TexCoords
+    // Layout 2: Coordenadas de Textura (vec2)
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
+    // Desvincula VAO para evitar alterações acidentais
     glBindVertexArray(0);
 }
 
-void Mesh::Draw(unsigned int shaderID) {
-    glActiveTexture(GL_TEXTURE0);
-    texture.Bind();
+// ====================================================
+// 3. RENDERIZAÇÃO (DRAW)
+// ====================================================
 
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+void Mesh::Draw(unsigned int shaderID) {
+    // Vincula Textura
+    glActiveTexture(GL_TEXTURE0);
+    this->texture.Bind();
+
+    // Desenha Mesh
+    glBindVertexArray(this->VAO);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(this->indices.size()), GL_UNSIGNED_INT, 0);
+
+    // Limpeza de estado
     glBindVertexArray(0);
 }
